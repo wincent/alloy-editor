@@ -75,11 +75,17 @@
        * @method componentDidMount
        */
       componentDidMount: function () {
-          if (this.props.renderExclusive || this.props.manualSelection) {
-              // We need to wait for the next rendering cycle before focusing to avoid undesired
-              // scrolls on the page
-              this._focusLinkInput();
+          if (!this.state.innerText) {
+            this._focusInput('textInput');
+          } else if (!this.state.linkHref) {
+              this._focusInput('linkInput');
           }
+
+          var nativeEditor = this.props.editor.get('nativeEditor');
+
+          nativeEditor.editable().on('click', function() {
+              this._clearBookmark();
+          }, this);
       },
 
       /**
@@ -128,16 +134,11 @@
        * @method getInitialState
        */
       getInitialState: function() {
-          var link = new CKEDITOR.Link(this.props.editor.get('nativeEditor')).getFromSelection();
+          var nativeEditor = this.props.editor.get('nativeEditor');
+          var link = new CKEDITOR.Link(nativeEditor).getFromSelection();
           var href = link ? link.getAttribute('href') : '';
           var viewMode = link && link.hasAttribute('href') ? true : false;
-          var innerText;
-
-            if (link) {
-                innerText = link.$.innerText;
-            } else {
-                innerText = this.props.innerText;
-            }
+          var innerText = link ? link.$.innerText : nativeEditor.getSelectionData().text;
 
           return {
               autocompleteSelected: false,
@@ -240,6 +241,12 @@
           );
       },
 
+      _clearBookmark: function() {
+        var nativeEditor = this.props.editor.get('nativeEditor');
+
+        nativeEditor._linkBookmark = null;
+      },
+
       /**
        * Clears the link input. This only changes the component internal state, but does not
        * affect the link element of the editor. Only the _removeLink and _updateLink methods
@@ -255,7 +262,8 @@
             linkHref: ''
           });
 
-          this._focusLinkInput();
+          this._clearBookmark();
+          this._focusInput('linkInput');
       },
 
       _updateViewMode: function() {
@@ -263,21 +271,7 @@
           viewMode: !this.state.viewMode
         });
 
-        this._focusLinkInput();
-      },
-
-      _focusTextInput: function() {
-            var instance = this;
-
-          var focusLinkEl = function() {
-              ReactDOM.findDOMNode(instance.refs.textInput).focus();
-          };
-
-          if (window.requestAnimationFrame) {
-              window.requestAnimationFrame(focusLinkEl);
-          } else {
-              setTimeout(focusLinkEl, 0);
-          }
+        this._focusInput('linkInput');
       },
 
       /**
@@ -285,14 +279,18 @@
        *
        * @instance
        * @memberof ButtonParioLinkEdit
-       * @method _focusLinkInput
+       * @method _focusInput
        * @protected
        */
-      _focusLinkInput: function() {
+      _focusInput: function(inputRef) {
         var instance = this;
 
         var focusLinkEl = function() {
-            ReactDOM.findDOMNode(instance.refs.linkInput).focus();
+            var input = instance.refs[inputRef];
+
+            if (input) {
+                ReactDOM.findDOMNode(input).focus();
+            }
         };
 
         if (window.requestAnimationFrame) {
@@ -326,11 +324,13 @@
                   autocompleteSelected: true
               });
           } else if (event.keyCode === 27) {
+              this._clearBookmark();
               var editor = this.props.editor.get('nativeEditor');
 
               new CKEDITOR.Link(editor).advanceSelection();
 
               this.props.editor.get('nativeEditor').fire('actionPerformed', this);
+
           }
       },
 
@@ -341,7 +341,7 @@
             innerText: event.target.value
           })
 
-          this._focusTextInput();
+          this._focusInput('textInput');
       },
 
       /**
@@ -358,7 +358,7 @@
               linkHref: event.target.value
           });
 
-          this._focusLinkInput();
+          this._focusInput('linkInput');
       },
 
 
@@ -377,7 +377,7 @@
               linkHref: event.target.getAttribute('data-value')
           });
 
-          this._focusLinkInput();
+          this._focusInput('linkInput');
       },
 
       /**
@@ -451,9 +451,13 @@
        */
       _updateLink: function() {
           var editor = this.props.editor.get('nativeEditor');
+
+          this._clearBookmark();
+
           var linkUtils = new CKEDITOR.Link(editor, {appendProtocol: this.props.appendProtocol});
           var linkAttrs = {};
           var modifySelection = { advance: true };
+
 
           if (this.state.linkHref) {
               if (this.state.element) {

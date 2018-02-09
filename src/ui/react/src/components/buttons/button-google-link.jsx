@@ -137,17 +137,11 @@
        * @protected
        */
       _requestExclusive: function() {
-        var selection = this.props.editor.get('nativeEditor').getSelection();
+        var editor = this.props.editor.get('nativeEditor');
 
-        if (selection) {
-            this.setState({
-                selectedText: selection.getSelectedText()
-            });
-        }
+        editor._linkBookmark = editor.getSelection().createBookmarks2();
 
-        console.log(AlloyEditor);
-
-        this.props.requestExclusive(ButtonParioLink.key);
+        editor.fire('actionPerformed', this);
       }
   });
 

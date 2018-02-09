@@ -42,6 +42,12 @@
         );
     };
 
+    var bookmarkSelectionTest = function(payload) {
+        var nativeEditor = payload.editor.get('nativeEditor');
+
+        return nativeEditor._linkBookmark || linkSelectionTest(payload);
+    };
+
     var imageSelectionTest = function(payload) {
         var selectionData = payload.data.selectionData;
 
@@ -77,6 +83,7 @@
     };
 
     AlloyEditor.SelectionTest = {
+        bookmark: bookmarkSelectionTest,
         embed: embedSelectionTest,
         image: imageSelectionTest,
         link: linkSelectionTest,
