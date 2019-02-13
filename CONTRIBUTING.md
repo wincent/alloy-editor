@@ -14,12 +14,12 @@ TBD
 
 ## Pull requests & Github issues
 
-* All pull requests should be sent to the `develop` branch, as the `master`
-branch should always reflect the most recent release.
-* Any merged changes will remain in the `develop` branch until the next
+* All pull requests should be sent to the `master` branch. The `stable`
+branch always reflects the most recent release.
+* Any merged changes will remain in the `master` branch until the next
 scheduled release.
 * The only exception to this rule is for emergency hot fixes, in which case the
-pull request can be sent to the `master` branch.
+pull request can be sent to the `stable` branch.
 * A Github issue should also be created for any bug fix or feature, this helps
 when generating the CHANGELOG.md file.
 * All commits in a given pull request should start with the `Fixes #xxx - `
@@ -64,11 +64,11 @@ releases, and one for emergency hot fixes.
 
 ## Scheduled release
 
-1. Create a release branch from the updated `develop` branch
+1. Create a release branch from the updated `master` branch
 
 ```
-git checkout develop
-git pull upstream develop
+git checkout master
+git pull upstream master
 git checkout -b release/vX.X.X
 ```
 
@@ -94,9 +94,14 @@ npm version patch|minor|major
 npm run build
 ```
 
-7. Generate changelog
+7. Generate changelog with [github_changelog_generator](https://github.com/skywinder/github-changelog-generator)
 
-github_changelog_generator (https://github.com/skywinder/github-changelog-generator)
+```
+gem install github_changelog_generator # using `sudo` if necessary
+github_changelog_generator liferay/alloy-editor -t $GITHUB_ACCESS_TOKEN
+```
+
+The `$GITHUB_ACCESS_TOKEN` can be generated at [github.com/settings/tokens/new](https://github.com/settings/tokens/new), and only needs minimal capabilities ("repo:status", "repo_deployment", "public_repo" should suffice).
 
 8. Commit changelog
 
@@ -114,11 +119,11 @@ git push --follow-tags
 ```
 
 
-10. Sync `develop` with `master`
+10. Sync `master` with `stable`
 
 ```
-git checkout develop
-git merge master
+git checkout master
+git merge stable
 ```
 
 11. Do GitHub release using the pushed vX.X.X tag and the appropriate portion of
@@ -126,16 +131,16 @@ CHANGELOG.md
 
 ## Hot fix
 
-1. Create a feature branch from `master` (assuming hot fix has already been
+1. Create a feature branch from `stable` (assuming hot fix has already been
 merged)
 
 ```
-git checkout master
-git pull upstream master
+git checkout stable
+git pull upstream stable
 git checkout -b feature/fix_foo
 ```
 
-2. Send a fix PR to `master`
+2. Send a fix PR to `stable`
 
 3. Follow steps 3-11 of a scheduled release
 
