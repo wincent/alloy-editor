@@ -84,7 +84,7 @@ const prefixes = Array.from(new Set(sources.map(getPrefix)));
 function getDirectories(prefixes) {
 	const directories = {};
 	for (let prefix of prefixes) {
-		const map = directories[prefix] = new Map();
+		const map = (directories[prefix] = new Map());
 		sources.forEach((source, index) => {
 			if (source.startsWith(prefix)) {
 				const pattern = globPatternToRegExpPattern(source);
@@ -130,7 +130,9 @@ const contexts = [
  * The list contains objects with keys `filename` and `context`.
  */
 const targets = contexts.reduce((acc, context) => {
-	const contextModules = context.keys().map(file => {file, context});
+	const contextModules = context.keys().map(file => {
+		file, context;
+	});
 	return acc.concat(contextModules);
 }, []);
 
@@ -143,7 +145,9 @@ function findSortIndex(file, directories) {
 	file = file.replace(/^.\//, '');
 	const prefix = getPrefix(file);
 	if (directories.hasOwnProperty(prefix)) {
-		return directories[prefix].values().find(({index, regex}) => regex.test(file)).index;
+		return directories[prefix]
+			.values()
+			.find(({index, regex}) => regex.test(file)).index;
 	} else {
 		return NaN;
 	}
@@ -159,7 +163,7 @@ targets
 		return {file, context, index};
 	})
 	.filter(({index}) => !isNaN(index))
-	.sort(({index: a}, {index: b}) =>  a - b);
+	.sort(({index: a}, {index: b}) => a - b);
 
 /**
  * Actually require the target files.
